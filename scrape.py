@@ -95,11 +95,24 @@ def parse(xml_data):
             date = r.find(format_tag("created")).text
             title = r.find(format_tag("title")).text
             abstract = r.find(format_tag("abstract")).text
+            abstract.replace('\\n', ' ') # reduce whitespace
             categories = r.find(format_tag("categories")).text
+            try:
+                # capture the authors too!
+                authors = r.find(format_tag("authors"))
+                names = []
+                for author in authors:
+                    _name = []
+                    for name in author:
+                        _name.append(name.text.encode('utf-8'))
+                    names.append("+".join(_name))
+                auth = "|".join(names)
+            except:
+                auth = "UNKNOWN"
         except:
             logging.error("Parsing of record failed:\n{0}".format(r))
         else:
-            results.append((arxiv_id, date, title, abstract, categories))
+            results.append((arxiv_id, date, title, abstract, categories, auth))
     return results
 
 
@@ -115,7 +128,7 @@ if __name__ == "__main__":
     file_ids = defaultdict(int)
     counts = defaultdict(int)
     for data in download():
-        for arxiv_id, date, title, abstract, categories in data:
+        for arxiv_id, date, title, abstract, categories, auth in data:
             c = categories.split()[0].split(".")[0].replace("/", "-")
             path = os.path.join(bp, c)
             try:
@@ -127,6 +140,7 @@ if __name__ == "__main__":
                 f.write("\t".join([
                     arxiv_id,
                     categories,
+                    auth,
                     " ".join(map(" ".join,
                                  map(word_tokenize,
                                      sent_tokenize(title)))),
