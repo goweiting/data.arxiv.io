@@ -91,12 +91,13 @@ def parse(xml_data):
     results = []
     for i, r in enumerate(tree.findall(record_tag)):
         try:
-            arxiv_id = r.find(format_tag("id")).text
-            date = r.find(format_tag("created")).text
-            title = r.find(format_tag("title")).text
-            abstract = r.find(format_tag("abstract")).text
+            # use encoding in utf-8 so to prrevent project
+            arxiv_id = (r.find(format_tag("id")).text).encode('utf-8')
+            date = (r.find(format_tag("created")).text).encode('utf-8')
+            title = (r.find(format_tag("title")).text).encode('utf-8')
+            abstract = (r.find(format_tag("abstract")).text).encode('utf-8')
             abstract.replace('\\n', ' ') # reduce whitespace
-            categories = r.find(format_tag("categories")).text
+            categories = (r.find(format_tag("categories")).text).encode('utf-8')
             try:
                 # capture the authors too!
                 authors = r.find(format_tag("authors"))
@@ -127,7 +128,7 @@ if __name__ == "__main__":
 
     file_ids = defaultdict(int)
     counts = defaultdict(int)
-    for data in download():
+    for data in download(start_date='2017-01-01'):
         for arxiv_id, date, title, abstract, categories, auth in data:
             c = categories.split()[0].split(".")[0].replace("/", "-")
             path = os.path.join(bp, c)
